@@ -1,7 +1,25 @@
 package v1
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"embed"
+	"net/http"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+var (
+	//go:embed web/index.html
+	webFiles embed.FS
+)
 
 func (r *V1) showUI(ctx *fiber.Ctx) error {
-	return ctx.SendFile("./internal/controller/restapi/v1/web/index.html")
+	file, err := webFiles.ReadFile("web/index.html")
+	if err != nil {
+		r.l.Error(err, "restapi - v1 - showUI")
+
+		return errorResponse(ctx, http.StatusInternalServerError, "problems with load UI")
+	}
+
+	ctx.Set("Content-Type", "text/html")
+	return ctx.Send(file)
 }
