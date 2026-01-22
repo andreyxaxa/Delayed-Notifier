@@ -79,7 +79,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
-	restapi.NewRouter(httpServer.App, notificationUseCase, l)
+	restapi.NewRouter(httpServer.App, cfg, notificationUseCase, l)
 
 	// Start servers
 	rmqServer.Start(ctx)
