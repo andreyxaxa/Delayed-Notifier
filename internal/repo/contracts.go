@@ -19,4 +19,10 @@ type (
 		MarkAsFailed(ctx context.Context, notificationUID uuid.UUID, now time.Time) error
 		MarkAsSent(ctx context.Context, notificationUID uuid.UUID, now time.Time) error
 	}
+
+	CacheNotificationRepo interface {
+		GetStatus(ctx context.Context, notificationUID uuid.UUID) (string, error)
+		SetStatus(ctx context.Context, notificationUID uuid.UUID, status string) error
+		DeleteStatus(ctx context.Context, notificationUID uuid.UUID) error
+	}
 )
