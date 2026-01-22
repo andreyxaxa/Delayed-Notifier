@@ -16,5 +16,8 @@ func NewNotificationRoutes(apiV1Group fiber.Router, n usecase.Notification, l lo
 		apiV1Group.Post("/notify", r.createNotification)
 		apiV1Group.Get("/notify/:id", r.getStatus)
 		apiV1Group.Delete("/notify/:id", r.cancelNotification)
+
+		// Web
+		apiV1Group.Get("/web", r.showUI)
 	}
 }

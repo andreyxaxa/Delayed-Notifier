@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="datetime-local"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📨 Notification Service</h1>
+
+        <!-- Форма создания уведомления -->
+        <div class="card">
+            <h2>Создать уведомление</h2>
+            
+            <div class="form-group">
+                <label>Выберите канал:</label>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="channel" value="email" checked>
+                        Email
+                    </label>
+                    <label>
+                        <input type="radio" name="channel" value="telegram">
+                        Telegram
+                    </label>
+                </div>
+            </div>
+
+            <!-- Email форма -->
+            <div id="emailForm">
+                <div class="form-group">
+                    <label for="emailTo">Получатель (email):</label>
+                    <input type="email" id="emailTo" placeholder="example@mail.ru">
+                </div>
+                <div class="form-group">
+                    <label for="emailSubject">Тема:</label>
+                    <input type="text" id="emailSubject" placeholder="Тема письма">
+                </div>
+                <div class="form-group">
+                    <label for="emailText">Сообщение:</label>
+                    <textarea id="emailText" placeholder="Текст сообщения"></textarea>
+                </div>
+            </div>
+
+            <!-- Telegram форма -->
+            <div id="telegramForm" class="hidden">
+                <div class="form-group">
+                    <label for="telegramChatId">Chat ID:</label>
+                    <input type="number" id="telegramChatId" placeholder="123456789">
+                </div>
+                <div class="form-group">
+                    <label for="telegramText">Сообщение:</label>
+                    <textarea id="telegramText" placeholder="Текст сообщения"></textarea>
+                </div>
+            </div>
+
+            <!-- Общее поле времени -->
+            <div class="form-group">
+                <label for="sendAt">Время отправки:</label>
+                <input type="datetime-local" id="sendAt">
+            </div>
+
+            <button onclick="createNotification()">Создать уведомление</button>
+
+            <div id="createResult"></div>
+        </div>
+
+        <!-- Форма проверки статуса -->
+        <div class="card">
+            <h2>Проверить статус уведомления</h2>
+            
+            <div class="form-group">
+                <label for="notificationUid">UUID уведомления:</label>
+                <input type="text" id="notificationUid" placeholder="00000000-0000-0000-0000-000000000000">
+            </div>
+
+            <button onclick="checkStatus()">Проверить статус</button>
+
+            <div id="statusResult"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/v1';
+
+        // Переключение между формами
+        document.querySelectorAll('input[name="channel"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const emailForm = document.getElementById('emailForm');
+                const telegramForm = document.getElementById('telegramForm');
+                
+                if (e.target.value === 'email') {
+                    emailForm.classList.remove('hidden');
+                    telegramForm.classList.add('hidden');
+                } else {
+                    emailForm.classList.add('hidden');
+                    telegramForm.classList.remove('hidden');
+                }
+            });
+        });
+
+        // текущее время + 5 минут по умолчанию
+        const now = new Date();
+        // конвертиим в мск
+        const mskOffset = 3 * 60;
+        const localOffset = now.getTimezoneOffset(); // смещение браузера
+        const mskTime = new Date(now.getTime() + (mskOffset + localOffset) * 60000);
+        mskTime.setMinutes(mskTime.getMinutes() + 5);
+        
+        const year = mskTime.getFullYear();
+        const month = String(mskTime.getMonth() + 1).padStart(2, '0');
+        const day = String(mskTime.getDate()).padStart(2, '0');
+        const hours = String(mskTime.getHours()).padStart(2, '0');
+        const minutes = String(mskTime.getMinutes()).padStart(2, '0');
+        
+        document.getElementById('sendAt').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        const sendAtLabel = document.querySelector('label[for="sendAt"]');
+        sendAtLabel.textContent = 'Время отправки (МСК):';
+
+        async function createNotification() {
+            const channel = document.querySelector('input[name="channel"]:checked').value;
+            const sendAt = document.getElementById('sendAt').value;
+            const resultDiv = document.getElementById('createResult');
+
+            if (!sendAt) {
+                showResult(resultDiv, 'error', 'Укажите время отправки');
+                return;
+            }
+
+            let payload = {
+                channel: channel
+            };
+
+            if (channel === 'email') {
+                const to = document.getElementById('emailTo').value;
+                const subject = document.getElementById('emailSubject').value;
+                const text = document.getElementById('emailText').value;
+
+                if (!to || !subject || !text) {
+                    showResult(resultDiv, 'error', 'Заполните все поля для email');
+                    return;
+                }
+
+                payload.email = { to, subject, text };
+            } else {
+                const chatId = parseInt(document.getElementById('telegramChatId').value);
+                const text = document.getElementById('telegramText').value;
+
+                if (!chatId || !text) {
+                    showResult(resultDiv, 'error', 'Заполните все поля для telegram');
+                    return;
+                }
+
+                payload.telegram = {
+                    chat_id: chatId,
+                    text: text
+                };
+            }
+
+            // конвертим время из мск в UTC для сервера
+            const localTime = new Date(sendAt);
+            const mskOffset = 3 * 60;
+            const browserOffset = localTime.getTimezoneOffset();
+            const utcTime = new Date(localTime.getTime() - (mskOffset + browserOffset) * 60000);
+            
+            const requestBody = {
+                send_at: utcTime.toISOString(),
+                payload: payload
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/notify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, 'success', 
+                        `✅ Уведомление создано!\n\nUID: ${data.uid}\nСтатус: ${data.status}`
+                    );
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Ошибка: ${data.message || JSON.stringify(data)}`
+                    );
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', `❌ Ошибка: ${error.message}`);
+            }
+        }
+
+        async function checkStatus() {
+            const uid = document.getElementById('notificationUid').value.trim();
+            const resultDiv = document.getElementById('statusResult');
+
+            if (!uid) {
+                showResult(resultDiv, 'error', 'Введите UUID уведомления');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/notify/${uid}`, {
+                    method: 'GET'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, 'success', 
+                        `✅ Статус уведомления:\n\n${JSON.stringify(data, null, 2)}`
+                    );
+                } else {
+                    showResult(resultDiv, 'error', 
+                        `❌ Ошибка: ${data.message || JSON.stringify(data)}`
+                    );
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', `❌ Ошибка: ${error.message}`);
+            }
+        }
+
+        function showResult(element, type, message) {
+            element.className = `result ${type}`;
+            element.innerHTML = `<pre>${message}</pre>`;
+        }
+    </script>
+</body>
+</html>
