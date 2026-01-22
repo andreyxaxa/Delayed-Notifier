@@ -1,0 +1,89 @@
+services:
+  db:
+    container_name: db-notify
+    image: postgres:18.1-alpine
+    environment:
+      POSTGRES_SSL_MODE: "disable"
+      POSTGRES_HOST: "db"
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: "notifications_db"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "sUp3RP4sSw0rD"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d notifications_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  migrate:
+    container_name: migrates-notify
+    image: migrate/migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    entrypoint: [
+      "migrate", 
+      "-path", "/migrations", 
+      "-database", "postgres://user:sUp3RP4sSw0rD@db:5432/notifications_db?sslmode=disable", 
+      "up"
+    ]
+  
+  redis:
+    container_name: redis-notify
+    image: redis:8-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    container_name: rabbitmq-notify
+    image: rabbitmq:4.2.2-management
+    environment:
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  app:
+    container_name: app-notify
+    build: .
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      
+    ports:
+      - "8080:8080"
+        
+
+volumes:
+  db_data:
+  rabbitmq_data:
+  redis_data:
