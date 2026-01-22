@@ -27,6 +27,8 @@ require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/rabbitmq/amqp091-go v1.10.0
+	github.com/wb-go/wbf v0.0.12
 	golang.org/x/sync v0.19.0
 	golang.org/x/sys v0.28.0 // indirect
 )
