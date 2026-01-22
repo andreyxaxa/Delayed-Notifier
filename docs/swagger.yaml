@@ -1,0 +1,181 @@
+definitions:
+  entity.EmailPayload:
+    properties:
+      subject:
+        example: Birtdhay
+        type: string
+      text:
+        example: Hello, dont forget about Alex's birthday!
+        type: string
+      to:
+        example: user@example.com
+        type: string
+    required:
+    - subject
+    - text
+    - to
+    type: object
+  entity.Payload:
+    properties:
+      channel:
+        enum:
+        - email
+        - telegram
+        type: string
+      email:
+        $ref: '#/definitions/entity.EmailPayload'
+      telegram:
+        $ref: '#/definitions/entity.TelegramPayload'
+    required:
+    - channel
+    type: object
+  entity.TelegramPayload:
+    properties:
+      chat_id:
+        example: 123456789
+        type: integer
+      text:
+        example: Hello, here's your delayed notification.
+        type: string
+    required:
+    - chat_id
+    - text
+    type: object
+  request.CreateNotificationRequest:
+    properties:
+      payload:
+        $ref: '#/definitions/entity.Payload'
+      send_at:
+        example: "2026-01-23T20:03:30+03:00"
+        type: string
+    required:
+    - payload
+    - send_at
+    type: object
+  response.CancelNotificationResponse:
+    properties:
+      status:
+        example: pending
+        type: string
+      uid:
+        example: 9a88d642-6c65-4f0f-b8f0-b920182cceb3
+        type: string
+    type: object
+  response.CreateNotificationResponse:
+    properties:
+      status:
+        example: pending
+        type: string
+      uid:
+        example: 9a88d642-6c65-4f0f-b8f0-b920182cceb3
+        type: string
+    type: object
+  response.Error:
+    properties:
+      error:
+        type: string
+    type: object
+  response.GetNotificationStatusResponse:
+    properties:
+      status:
+        example: sent
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /v1/notify:
+    post:
+      consumes:
+      - application/json
+      description: Creates new notification
+      operationId: create
+      parameters:
+      - description: Notification
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CreateNotificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Create notification
+      tags:
+      - notifications
+  /v1/notify/{id}:
+    delete:
+      description: Cancel notification by UUID
+      operationId: cancel
+      parameters:
+      - description: Notification UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.CancelNotificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Cancel notification
+      tags:
+      - notifications
+    get:
+      description: Returns notification status by UUID
+      operationId: get
+      parameters:
+      - description: Notification UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GetNotificationStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Get notification status
+      tags:
+      - notifications
+swagger: "2.0"
