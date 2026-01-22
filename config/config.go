@@ -8,14 +8,15 @@ import (
 
 type (
 	Config struct {
-		HTTP     HTTP
-		PG       PG
-		Redis    Redis
-		Log      Log
-		RMQ      RMQ
-		Worker   Worker
-		SMTPMail SMTPMail
-		Telegram Telegram
+		HTTP         HTTP
+		PG           PG
+		Redis        Redis
+		Log          Log
+		RMQ          RMQ
+		RMQPublisher RMQPublisher
+		Worker       Worker
+		SMTPMail     SMTPMail
+		Telegram     Telegram
 	}
 
 	HTTP struct {
@@ -47,6 +48,12 @@ type (
 		RoutingKey    string `env:"RMQ_ROUTING_KEY"`
 		Workers       int    `env:"RMQ_WORKERS"`
 		PrefetchCount int    `env:"RMQ_PREFETCH_COUNT"`
+	}
+
+	RMQPublisher struct {
+		Exchange    string `env:"RMQPUBLISHER_EXCHANGE"`
+		RoutingKey  string `env:"RMQPUBLISHER_ROUTING_KEY"`
+		ContentType string `env:"RMQPUBLISHER_CONTENT_TYPE"`
 	}
 
 	Worker struct {
