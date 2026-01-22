@@ -9,6 +9,8 @@ import (
 
 	"github.com/andreyxaxa/Delayed-Notifier/config"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/controller/restapi"
+	mailsender "github.com/andreyxaxa/Delayed-Notifier/internal/infrastructure/mail_sender"
+	telegramsender "github.com/andreyxaxa/Delayed-Notifier/internal/infrastructure/telegram_sender"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/repo/cache"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/repo/persistent"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/usecase/notification"
@@ -16,6 +18,8 @@ import (
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/logger"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/postgres"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/redis"
+	"github.com/andreyxaxa/Delayed-Notifier/pkg/smtpsender"
+	"github.com/andreyxaxa/Delayed-Notifier/pkg/telegrambotsender"
 )
 
 func Run(cfg *config.Config) {
@@ -37,9 +41,25 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - redis.New: %v", err))
 	}
 
+	// SMTP Sender
+	smtpSender := smtpsender.New(
+		smtpsender.Host(cfg.SMTPMail.Host),
+		smtpsender.Port(cfg.SMTPMail.Port),
+		smtpsender.Username(cfg.SMTPMail.Username),
+		smtpsender.Password(cfg.SMTPMail.Password),
+	)
+
+	// Telegram bot-api Sender
+	tgSender, err := telegrambotsender.New(cfg.Telegram.Token)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - telegrambotsender.New: %v", err))
+	}
+
 	// Use-Case
 	notificationUseCase := notification.New(
 		persistent.New(pg),
+		mailsender.New(smtpSender),
+		telegramsender.New(tgSender),
 		cache.New(rd),
 		l,
 	)
