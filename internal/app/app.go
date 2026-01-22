@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/andreyxaxa/Delayed-Notifier/config"
+	"github.com/andreyxaxa/Delayed-Notifier/internal/controller/rabbitmq"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/controller/restapi"
 	mailsender "github.com/andreyxaxa/Delayed-Notifier/internal/infrastructure/mail_sender"
 	telegramsender "github.com/andreyxaxa/Delayed-Notifier/internal/infrastructure/telegram_sender"
@@ -18,6 +19,7 @@ import (
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/logger"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/postgres"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/redis"
+	"github.com/andreyxaxa/Delayed-Notifier/pkg/rmqserver"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/smtpsender"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/telegrambotsender"
 )
@@ -64,11 +66,20 @@ func Run(cfg *config.Config) {
 		l,
 	)
 
+	// RabbitMQ Server
+	rmqRouter := rabbitmq.NewRouter(notificationUseCase, l)
+
+	rmqServer, err := rmqserver.New(cfg.RMQ.URL, rmqRouter, l)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - rmq.New: %v", err))
+	}
+
 	// HTTP Server
 	httpServer := httpserver.New(l, httpserver.Port(cfg.HTTP.Port))
 	restapi.NewRouter(httpServer.App, notificationUseCase, l)
 
 	// Start servers
+	rmqServer.Start(ctx)
 	httpServer.Start()
 
 	// Waiting signal
