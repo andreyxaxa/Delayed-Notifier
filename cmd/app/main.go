@@ -2,17 +2,19 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/andreyxaxa/Delayed-Notifier/config"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/app"
 	"github.com/joho/godotenv"
 )
 
-// TODO: docker-compose - ДЕЛАТЬ HEALTHCHECK RABBITMQ
-
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("config error: %s", err)
+	if _, err := os.Stat(".env"); err == nil {
+		err = godotenv.Load()
+		if err != nil {
+			log.Fatalf("config error: %s", err)
+		}
 	}
 
 	cfg, err := config.New()
