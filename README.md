@@ -102,7 +102,7 @@ response:
 ```
 make deps
 ```
-docker compose down:
+docker compose down -v:
 ```
 make compose-down
 ```
