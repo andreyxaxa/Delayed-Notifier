@@ -8,11 +8,13 @@ import (
 
 type (
 	Config struct {
-		HTTP  HTTP
-		PG    PG
-		Redis Redis
-		Log   Log
-		RMQ   RMQ
+		HTTP     HTTP
+		PG       PG
+		Redis    Redis
+		Log      Log
+		RMQ      RMQ
+		SMTPMail SMTPMail
+		Telegram Telegram
 	}
 
 	HTTP struct {
@@ -44,6 +46,17 @@ type (
 		RoutingKey    string `env:"RMQ_ROUTING_KEY"`
 		Workers       int    `env:"RMQ_WORKERS"`
 		PrefetchCount int    `env:"RMQ_PREFETCH_COUNT"`
+	}
+
+	SMTPMail struct {
+		Username string `env:"SMTPMAIL_USERNAME,required"`
+		Password string `env:"SMTPMAIL_PASSWORD,required"`
+		Host     string `env:"SMTPMAIL_HOST,required"`
+		Port     string `env:"SMTPMAIL_PORT,required"`
+	}
+
+	Telegram struct {
+		Token string `env:"TELEGRAM_BOT_TOKEN,required"`
 	}
 )
 
