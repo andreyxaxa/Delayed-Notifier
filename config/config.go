@@ -13,6 +13,7 @@ type (
 		Redis    Redis
 		Log      Log
 		RMQ      RMQ
+		Worker   Worker
 		SMTPMail SMTPMail
 		Telegram Telegram
 	}
@@ -46,6 +47,10 @@ type (
 		RoutingKey    string `env:"RMQ_ROUTING_KEY"`
 		Workers       int    `env:"RMQ_WORKERS"`
 		PrefetchCount int    `env:"RMQ_PREFETCH_COUNT"`
+	}
+
+	Worker struct {
+		ShutdownTimeout int `env:"WORKER_SHUTDOWN_TIMEOUT,required"`
 	}
 
 	SMTPMail struct {
