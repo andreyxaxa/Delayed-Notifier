@@ -17,7 +17,15 @@ type (
 		MarkAsProcessing(ctx context.Context, notificationUID uuid.UUID, now time.Time) error
 		RetryNotification(ctx context.Context, notificationUID uuid.UUID, nextTry, now time.Time) error
 		MarkAsFailed(ctx context.Context, notificationUID uuid.UUID, now time.Time) error
+		SendMailNotification(ctx context.Context, notification entity.Notification) error
+		SendTelegramNotification(ctx context.Context, notification entity.Notification) error
 	}
 
-	// TODO: telegram, mail senders interfaces
+	TelegramSender interface {
+		Send(notification entity.Notification) (bool, error)
+	}
+
+	MailSender interface {
+		Send(notification entity.Notification) error
+	}
 )

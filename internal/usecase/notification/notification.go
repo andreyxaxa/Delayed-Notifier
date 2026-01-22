@@ -8,6 +8,7 @@ import (
 
 	"github.com/andreyxaxa/Delayed-Notifier/internal/entity"
 	"github.com/andreyxaxa/Delayed-Notifier/internal/repo"
+	"github.com/andreyxaxa/Delayed-Notifier/internal/usecase"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/logger"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/types/errs"
 	"github.com/andreyxaxa/Delayed-Notifier/pkg/types/status"
@@ -15,17 +16,21 @@ import (
 )
 
 type UseCase struct {
-	repo  repo.NotificationRepo
-	cache repo.CacheNotificationRepo
+	repo       repo.NotificationRepo
+	mailSender usecase.MailSender
+	tgSender   usecase.TelegramSender
+	cache      repo.CacheNotificationRepo
 
 	l logger.Interface
 }
 
-func New(r repo.NotificationRepo, c repo.CacheNotificationRepo, l logger.Interface) *UseCase {
+func New(r repo.NotificationRepo, ms usecase.MailSender, ts usecase.TelegramSender, c repo.CacheNotificationRepo, l logger.Interface) *UseCase {
 	return &UseCase{
-		repo:  r,
-		cache: c,
-		l:     l,
+		repo:       r,
+		mailSender: ms,
+		tgSender:   ts,
+		cache:      c,
+		l:          l,
 	}
 }
 
@@ -146,4 +151,53 @@ func (uc *UseCase) MarkAsFailed(ctx context.Context, notificationUID uuid.UUID, 
 	return nil
 }
 
-// TODO: telegram, mail senders
+func (uc *UseCase) SendMailNotification(ctx context.Context, notification entity.Notification) error {
+	err := uc.mailSender.Send(notification)
+	if err != nil {
+		return fmt.Errorf("NotificationUseCase - SendMailNotification - uc.mailSender.Send: %w", err)
+	}
+
+	err = uc.repo.MarkAsSent(ctx, notification.UID, time.Now())
+	if err != nil {
+		return fmt.Errorf("NotificationUseCase - SendMailNotification - uc.repo.MarkAsSent: %w", err)
+	}
+
+	// cache invalidation
+	err = uc.cache.DeleteStatus(ctx, notification.UID)
+	if err != nil {
+		uc.l.Warn("NotificationUseCase - SendMailNotification - uc.cache.DeleteStatus: %v", err)
+	}
+
+	return nil
+}
+
+func (uc *UseCase) SendTelegramNotification(ctx context.Context, notification entity.Notification) error {
+	// defer cache invalidation
+	defer func() {
+		err := uc.cache.DeleteStatus(ctx, notification.UID)
+		if err != nil {
+			uc.l.Warn("NotificationUseCase - SendTelegramNotification - uc.cache.DeleteStatus: %v", err)
+		}
+	}()
+
+	sent, err := uc.tgSender.Send(notification)
+	if err != nil {
+		return fmt.Errorf("NotificationUseCase - SendTelegramNotification - uc.mailSender.Send: %w", err)
+	}
+
+	if !sent {
+		err = uc.repo.MarkAsFailed(ctx, notification.UID, time.Now())
+		if err != nil {
+			return fmt.Errorf("NotificationUseCase - SendTelegramNotification - uc.repo.MarkAsFailed: %w", err)
+		}
+
+		return fmt.Errorf("NotificationUseCase - SendTelegramNotification - uc.mailSender.Send: %w", errs.ErrInvalidChatID)
+	}
+
+	err = uc.repo.MarkAsSent(ctx, notification.UID, time.Now())
+	if err != nil {
+		return fmt.Errorf("NotificationUseCase - SendTelegramNotification - uc.repo.MarkAsSent: %w", err)
+	}
+
+	return nil
+}
