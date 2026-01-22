@@ -17,6 +17,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// @Summary 	Create notification
+// @Description Creates new notification
+// @ID 			create
+// @Tags 		notifications
+// @Accept 		json
+// @Produce 	json
+// @Param 		request body request.CreateNotificationRequest true "Notification"
+// @Success 	200 {object} response.CreateNotificationResponse
+// @Failure 	400 {object} response.Error
+// @Failure 	500 {object} response.Error
+// @Router 		/v1/notify [post]
 func (r *V1) createNotification(ctx *fiber.Ctx) error {
 	now := time.Now()
 	var body request.CreateNotificationRequest
@@ -68,6 +79,17 @@ func (r *V1) createNotification(ctx *fiber.Ctx) error {
 	return ctx.Status(http.StatusOK).JSON(resp)
 }
 
+// @Summary     Get notification status
+// @Description Returns notification status by UUID
+// @ID 			get
+// @Tags        notifications
+// @Produce     json
+// @Param 		id path string true "Notification UUID"
+// @Success 	200 {object} response.GetNotificationStatusResponse
+// @Failure 	400 {object} response.Error
+// @Failure 	404 {object} response.Error
+// @Failure 	500 {object} response.Error
+// @Router 		/v1/notify/{id} [get]
 func (r *V1) getStatus(ctx *fiber.Ctx) error {
 	uidStr := ctx.Params("id")
 	uid, err := uuid.Parse(uidStr)
@@ -85,9 +107,24 @@ func (r *V1) getStatus(ctx *fiber.Ctx) error {
 		return errorResponse(ctx, http.StatusInternalServerError, "storage problems")
 	}
 
-	return ctx.Status(http.StatusOK).JSON(s)
+	resp := response.GetNotificationStatusResponse{
+		Status: s,
+	}
+
+	return ctx.Status(http.StatusOK).JSON(resp)
 }
 
+// @Summary 	Cancel notification
+// @Description Cancel notification by UUID
+// @ID 			cancel
+// @Tags 		notifications
+// @Produce 	json
+// @Param 		id path string true "Notification UUID"
+// @Success 	200 {object} response.CancelNotificationResponse
+// @Failure 	400 {object} response.Error
+// @Failure 	404 {object} response.Error
+// @Failure 	500 {object} response.Error
+// @Router 		/v1/notify/{id} [delete]
 func (r *V1) cancelNotification(ctx *fiber.Ctx) error {
 	uidStr := ctx.Params("id")
 	uid, err := uuid.Parse(uidStr)
