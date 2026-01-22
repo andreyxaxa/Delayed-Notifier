@@ -24,12 +24,12 @@ type Payload struct {
 }
 
 type EmailPayload struct {
-	To      string `json:"to" validate:"required,email"`
-	Subject string `json:"subject" validate:"required"`
-	Text    string `json:"text" validate:"required"`
+	To      string `json:"to" validate:"required,email" example:"user@example.com"`
+	Subject string `json:"subject" validate:"required" example:"Birtdhay"`
+	Text    string `json:"text" validate:"required" example:"Hello, dont forget about Alex's birthday!"`
 }
 
 type TelegramPayload struct {
-	ChatID int    `json:"chat_id" validate:"required"`
-	Text   string `json:"text" validate:"required"`
+	ChatID int    `json:"chat_id" validate:"required" example:"123456789"`
+	Text   string `json:"text" validate:"required" example:"Hello, here's your delayed notification."`
 }
