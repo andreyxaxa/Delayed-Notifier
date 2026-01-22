@@ -17,6 +17,7 @@ type (
 		Worker       Worker
 		SMTPMail     SMTPMail
 		Telegram     Telegram
+		Swagger      Swagger
 	}
 
 	HTTP struct {
@@ -69,6 +70,10 @@ type (
 
 	Telegram struct {
 		Token string `env:"TELEGRAM_BOT_TOKEN,required"`
+	}
+
+	Swagger struct {
+		Enabled bool `env:"SWAGGER_ENABLED" envDefault:"false"`
 	}
 )
 
