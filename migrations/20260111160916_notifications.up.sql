@@ -9,6 +9,6 @@ CREATE TABLE IF NOT EXISTS notifications
     retry_count INT         NOT NULL DEFAULT 0
 );
 
-CREATE INDEX idx_pending_notifications
+CREATE INDEX IF NOT EXISTS idx_pending_notifications
 ON notifications (send_at ASC)
 WHERE status = 'pending';
